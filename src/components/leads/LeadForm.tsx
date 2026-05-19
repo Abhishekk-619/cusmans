@@ -1,0 +1,210 @@
+import { useForm } from 'react-hook-form'
+import { LEAD_STATUSES, LEAD_SOURCES, type Lead, type LeadFormData } from '../../types'
+
+interface LeadFormProps {
+  initialValues?: Partial<Lead>
+  onSubmit: (data: LeadFormData) => void
+  onCancel: () => void
+}
+
+const inputClass =
+  'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition-colors'
+
+const errorInputClass =
+  'w-full rounded-lg border border-red-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none transition-colors'
+
+const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
+
+export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LeadFormData>({
+    defaultValues: {
+      full_name: initialValues?.full_name ?? '',
+      phone: initialValues?.phone ?? '',
+      email: initialValues?.email ?? '',
+      company: initialValues?.company ?? '',
+      lead_source: initialValues?.lead_source ?? 'Agent',
+      assigned_to: initialValues?.assigned_to ?? '',
+      status: initialValues?.status ?? 'New Lead',
+      followup_date: initialValues?.followup_date ?? null,
+      notes: initialValues?.notes ?? '',
+      website_link: initialValues?.website_link ?? '',
+      business_type: initialValues?.business_type ?? '',
+    },
+  })
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <div className="space-y-4">
+
+        {/* Full Name */}
+        <div>
+          <label className={labelClass}>
+            Full Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="Jane Smith"
+            className={errors.full_name ? errorInputClass : inputClass}
+            {...register('full_name', { required: 'Full name is required' })}
+          />
+          {errors.full_name && (
+            <p className="mt-1 text-xs text-red-500">{errors.full_name.message}</p>
+          )}
+        </div>
+
+        {/* Phone + Email */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Phone</label>
+            <input
+              type="tel"
+              placeholder="+91 98765 43210"
+              className={errors.phone ? errorInputClass : inputClass}
+              {...register('phone', {
+                pattern: {
+                  value: /^[+]?[\d\s\-().]{7,15}$/,
+                  message: 'Enter a valid phone number',
+                },
+              })}
+            />
+            {errors.phone && (
+              <p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>
+            )}
+          </div>
+          <div>
+            <label className={labelClass}>Email</label>
+            <input
+              type="email"
+              placeholder="jane@example.com"
+              className={errors.email ? errorInputClass : inputClass}
+              {...register('email', {
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: 'Enter a valid email address',
+                },
+              })}
+            />
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Company + Website Link */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Company</label>
+            <input
+              type="text"
+              placeholder="Acme Corp"
+              className={inputClass}
+              {...register('company')}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Website Link</label>
+            <input
+              type="url"
+              placeholder="https://example.com"
+              className={errors.website_link ? errorInputClass : inputClass}
+              {...register('website_link', {
+                pattern: {
+                  value: /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/,
+                  message: 'Enter a valid URL',
+                },
+              })}
+            />
+            {errors.website_link && (
+              <p className="mt-1 text-xs text-red-500">{errors.website_link.message}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Type + Type of Business */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Type</label>
+            <select className={inputClass} {...register('lead_source')}>
+              {LEAD_SOURCES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Type of Business</label>
+            <input
+              type="text"
+              placeholder="e.g. Mutual Funds, Insurance"
+              className={inputClass}
+              {...register('business_type')}
+            />
+          </div>
+        </div>
+
+        {/* Assigned To */}
+        <div>
+          <label className={labelClass}>Assigned To</label>
+          <input
+            type="text"
+            placeholder="Alice Johnson"
+            className={inputClass}
+            {...register('assigned_to')}
+          />
+        </div>
+
+        {/* Status + Follow-up Date */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Status</label>
+            <select className={inputClass} {...register('status')}>
+              {LEAD_STATUSES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Follow-up Date</label>
+            <input
+              type="date"
+              className={inputClass}
+              {...register('followup_date')}
+            />
+          </div>
+        </div>
+
+        {/* Notes */}
+        <div>
+          <label className={labelClass}>Notes</label>
+          <textarea
+            rows={3}
+            placeholder="Add any notes about this lead..."
+            className={inputClass}
+            {...register('notes')}
+          />
+        </div>
+
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+        >
+          Save Lead
+        </button>
+      </div>
+    </form>
+  )
+}
