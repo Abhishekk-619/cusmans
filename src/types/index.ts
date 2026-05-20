@@ -48,6 +48,7 @@ export interface Lead {
   website_link?: string;
   business_type?: string;
   followup_status?: 'Ongoing' | 'Completed';
+  followup_time?: string; // "HH:mm" — stored separately, combined with followup_date for display
 }
 
 export interface Activity {

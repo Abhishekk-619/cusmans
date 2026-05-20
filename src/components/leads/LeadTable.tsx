@@ -17,7 +17,7 @@ const columns: { key: SortConfig['column']; label: string }[] = [
   { key: 'phone', label: 'Phone' },
   { key: 'email', label: 'Email' },
   { key: 'company', label: 'Company' },
-  { key: 'lead_source', label: 'Type' },
+  { key: 'lead_source', label: 'Type of Business' },
   { key: 'status', label: 'Status' },
   { key: 'assigned_to', label: 'Assigned To' },
   { key: 'followup_date', label: 'Follow-up Date' },

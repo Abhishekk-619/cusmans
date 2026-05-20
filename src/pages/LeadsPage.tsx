@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useCRMStore } from '../store/useCRMStore'
 import { applyFiltersAndSort } from '../store/selectors'
 import { LeadFilters } from '../components/leads/LeadFilters'
 import { LeadTable } from '../components/leads/LeadTable'
 import { AddLeadModal } from '../components/leads/AddLeadModal'
-import type { LeadFilters as LeadFiltersType, SortConfig } from '../types'
+import type { LeadFilters as LeadFiltersType, SortConfig, LeadStatus } from '../types'
 
 const defaultFilters: LeadFiltersType = {
   searchTerm: '',
@@ -24,9 +25,22 @@ export function LeadsPage() {
   const deleteLead = useCRMStore((s) => s.deleteLead)
   const openDrawer = useCRMStore((s) => s.openDrawer)
 
-  const [filters, setFilters] = useState<LeadFiltersType>(defaultFilters)
+  const [searchParams] = useSearchParams()
+
+  const [filters, setFilters] = useState<LeadFiltersType>(() => ({
+    ...defaultFilters,
+    status: (searchParams.get('status') as LeadStatus | null) ?? '',
+  }))
   const [sort, setSort] = useState<SortConfig>(defaultSort)
   const [addLeadOpen, setAddLeadOpen] = useState(false)
+
+  // Sync filter when URL param changes (e.g. navigating from dashboard)
+  useEffect(() => {
+    const statusParam = searchParams.get('status') as LeadStatus | null
+    if (statusParam) {
+      setFilters((prev) => ({ ...prev, status: statusParam }))
+    }
+  }, [searchParams])
 
   const filteredLeads = applyFiltersAndSort(leads, filters, sort)
 

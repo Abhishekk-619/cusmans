@@ -155,22 +155,44 @@ export function LeadDrawer() {
                     <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                       Follow-up Information
                     </h3>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="date"
-                        value={lead.followup_date ?? ''}
-                        onChange={(e) => handleFollowupChange(e.target.value)}
-                        className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
-                      />
-                      {lead.followup_date && (
-                        <button
-                          onClick={() => handleFollowupChange('')}
-                          className="px-3 py-2 text-xs font-medium text-green-700 border border-green-200 rounded-lg hover:bg-green-50 transition-colors whitespace-nowrap"
-                        >
-                          Mark Complete
-                        </button>
-                      )}
+                    <div className="grid grid-cols-2 gap-3 mb-2">
+                      <div>
+                        <p className="text-xs text-gray-400 font-medium mb-1">Date</p>
+                        <input
+                          type="date"
+                          value={lead.followup_date ? lead.followup_date.slice(0, 10) : ''}
+                          onChange={(e) => {
+                            const time = lead.followup_time ?? ''
+                            const combined = time ? `${e.target.value}T${time}` : e.target.value
+                            handleFollowupChange(combined || '')
+                          }}
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 font-medium mb-1">Time</p>
+                        <input
+                          type="time"
+                          value={lead.followup_time ?? ''}
+                          onChange={(e) => {
+                            const date = lead.followup_date ? lead.followup_date.slice(0, 10) : ''
+                            if (date) {
+                              handleFollowupChange(`${date}T${e.target.value}`)
+                            }
+                            updateLead(lead.id, { followup_time: e.target.value })
+                          }}
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
+                    {lead.followup_date && (
+                      <button
+                        onClick={() => handleFollowupChange('')}
+                        className="px-3 py-2 text-xs font-medium text-green-700 border border-green-200 rounded-lg hover:bg-green-50 transition-colors whitespace-nowrap"
+                      >
+                        Mark Complete
+                      </button>
+                    )}
                   </section>
 
                   {/* Notes */}

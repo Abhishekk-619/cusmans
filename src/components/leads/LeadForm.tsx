@@ -62,12 +62,20 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
             <label className={labelClass}>Phone</label>
             <input
               type="tel"
-              placeholder="+91 98765 43210"
+              placeholder="10-digit number"
+              maxLength={10}
               className={errors.phone ? errorInputClass : inputClass}
+              onKeyDown={(e) => {
+                // Allow: backspace, delete, tab, escape, enter, arrow keys
+                const allowed = ['Backspace','Delete','Tab','Escape','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown']
+                if (allowed.includes(e.key)) return
+                // Block anything that's not a digit
+                if (!/^\d$/.test(e.key)) e.preventDefault()
+              }}
               {...register('phone', {
                 pattern: {
-                  value: /^[+]?[\d\s\-().]{7,15}$/,
-                  message: 'Enter a valid phone number',
+                  value: /^\d{10}$/,
+                  message: 'Phone number must be exactly 10 digits',
                 },
               })}
             />
@@ -124,10 +132,10 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
           </div>
         </div>
 
-        {/* Type + Type of Business */}
+        {/* Type of Business + Assigned To */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelClass}>Type</label>
+            <label className={labelClass}>Type of Business</label>
             <select className={inputClass} {...register('lead_source')}>
               {LEAD_SOURCES.map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -135,29 +143,18 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
             </select>
           </div>
           <div>
-            <label className={labelClass}>Type of Business</label>
+            <label className={labelClass}>Assigned To</label>
             <input
               type="text"
-              placeholder="e.g. Mutual Funds, Insurance"
+              placeholder="Alice Johnson"
               className={inputClass}
-              {...register('business_type')}
+              {...register('assigned_to')}
             />
           </div>
         </div>
 
-        {/* Assigned To */}
-        <div>
-          <label className={labelClass}>Assigned To</label>
-          <input
-            type="text"
-            placeholder="Alice Johnson"
-            className={inputClass}
-            {...register('assigned_to')}
-          />
-        </div>
-
-        {/* Status + Follow-up Date */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Status + Follow-up Date + Follow-up Time */}
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <label className={labelClass}>Status</label>
             <select className={inputClass} {...register('status')}>
@@ -172,6 +169,14 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
               type="date"
               className={inputClass}
               {...register('followup_date')}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Follow-up Time</label>
+            <input
+              type="time"
+              className={inputClass}
+              {...register('followup_time')}
             />
           </div>
         </div>

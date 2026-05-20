@@ -1,5 +1,5 @@
-import { format } from 'date-fns'
 import { StatusBadge } from '../ui/StatusBadge'
+import { formatFollowupDateTime, formatDate, formatTime } from '../../utils/formatDateTime'
 import type { Lead } from '../../types'
 
 interface LeadRowProps {
@@ -10,15 +10,6 @@ interface LeadRowProps {
 }
 
 export function LeadRow({ lead, onRowClick, onDelete, onToggleFollowupStatus }: LeadRowProps) {
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '—'
-    try {
-      return format(new Date(dateStr + (dateStr.length === 10 ? 'T00:00:00' : '')), 'MMM d, yyyy')
-    } catch {
-      return '—'
-    }
-  }
-
   const isLost = lead.status === 'Lost'
   const followupStatus = lead.followup_status ?? 'Ongoing'
 
@@ -28,7 +19,7 @@ export function LeadRow({ lead, onRowClick, onDelete, onToggleFollowupStatus }: 
         {formatDate(lead.created_at)}
       </td>
       <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-        {lead.created_at ? format(new Date(lead.created_at), 'hh:mm a') : '—'}
+        {formatTime(lead.created_at)}
       </td>
       <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
         {lead.full_name}
@@ -42,7 +33,7 @@ export function LeadRow({ lead, onRowClick, onDelete, onToggleFollowupStatus }: 
       </td>
       <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.assigned_to || '—'}</td>
       <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-        {formatDate(lead.followup_date)}
+        {formatFollowupDateTime(lead.followup_date)}
       </td>
 
       {/* Follow-up Status column */}

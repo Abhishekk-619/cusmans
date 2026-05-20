@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { format } from 'date-fns'
 import { StatusBadge } from '../ui/StatusBadge'
+import { formatFollowupDateTime } from '../../utils/formatDateTime'
 import type { Lead } from '../../types'
 
 interface FollowupEntryProps {
@@ -20,21 +20,15 @@ export function FollowupEntry({
 }: FollowupEntryProps) {
   const [rescheduling, setRescheduling] = useState(false)
   const [newDate, setNewDate] = useState('')
-
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '—'
-    try {
-      return format(new Date(dateStr + 'T00:00:00'), 'MMM d, yyyy')
-    } catch {
-      return '—'
-    }
-  }
+  const [newTime, setNewTime] = useState('')
 
   const handleRescheduleConfirm = () => {
     if (!newDate) return
-    onReschedule(lead.id, newDate)
+    const combined = newTime ? `${newDate}T${newTime}` : newDate
+    onReschedule(lead.id, combined)
     setRescheduling(false)
     setNewDate('')
+    setNewTime('')
   }
 
   return (
@@ -61,10 +55,10 @@ export function FollowupEntry({
             )}
           </div>
 
-          {/* Meta */}
+          {/* Meta — date + time */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
             <span className="text-xs text-gray-500">
-              {formatDate(lead.followup_date)}
+              {formatFollowupDateTime(lead.followup_date)}
               {isOverdue && (
                 <span className="ml-1 text-amber-600 font-medium">· Overdue</span>
               )}
@@ -79,13 +73,19 @@ export function FollowupEntry({
             <p className="text-xs text-gray-500 mt-1.5 line-clamp-2">{lead.notes}</p>
           )}
 
-          {/* Reschedule inline */}
+          {/* Reschedule inline — separate date + time */}
           {rescheduling && (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               <input
                 type="date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
+                className="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
+              />
+              <input
+                type="time"
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
                 className="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
               />
               <button
@@ -96,7 +96,7 @@ export function FollowupEntry({
                 Confirm
               </button>
               <button
-                onClick={() => { setRescheduling(false); setNewDate('') }}
+                onClick={() => { setRescheduling(false); setNewDate(''); setNewTime('') }}
                 className="px-2 py-1 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
