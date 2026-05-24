@@ -10,14 +10,50 @@ export const getActivitiesForLead = (activities: Activity[], leadId: string): Ac
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
 
 /**
- * Categorize leads by follow-up urgency using full timestamp comparison.
- * - overdue: followup_date is in the past (before now)
- * - today: followup_date is today (between start and end of today) and not yet passed
- * - upcoming: followup_date is after today
+ * Resolve the lead's effective follow-up timestamp.
+ * - If followup_date already contains a time, use it directly
+ * - If followup_date is date-only and followup_time exists, combine them
+ * - If followup_date is date-only and no time exists, treat it as start of day
+ */
+export function getLeadFollowupTimestamp(lead: Lead): number | null {
+  const dateStr = lead.followup_date
+  if (!dateStr) return null
+
+  if (dateStr.length > 10) {
+    const t = new Date(dateStr).getTime()
+    return Number.isNaN(t) ? null : t
+  }
+
+  const combined = lead.followup_time ? `${dateStr}T${lead.followup_time}` : `${dateStr}T00:00:00`
+  const t = new Date(combined).getTime()
+  return Number.isNaN(t) ? null : t
+}
+
+export function isLeadFollowupOverdue(lead: Lead, now = Date.now()): boolean {
+  if (!lead.followup_date) return false
+
+  const timestamp = getLeadFollowupTimestamp(lead)
+  if (timestamp == null) return false
+
+  if (lead.followup_date.length === 10 && !lead.followup_time) {
+    return timestamp < startOfDay(new Date(now)).getTime()
+  }
+
+  return timestamp < now
+}
+
+/**
+ * Categorize leads by follow-up urgency:
+ * - overdue: followup datetime has passed (before now)
+ * - today: followup is today and time has NOT yet passed
+ * - upcoming: followup is after today
+ *
+ * For date-only entries (no time set), the entire day is considered "today"
+ * until midnight — it only becomes overdue the next day.
  */
 export const categorizeFollowups = (
   leads: Lead[],
-  _today: string // kept for API compatibility but we use Date.now() internally
+  _today: string
 ): { today: Lead[]; upcoming: Lead[]; overdue: Lead[] } => {
   const now = Date.now()
   const todayStart = startOfDay(new Date()).getTime()
@@ -27,15 +63,24 @@ export const categorizeFollowups = (
 
   return {
     overdue: leadsWithDate.filter((l) => {
-      const t = new Date(l.followup_date!).getTime()
+      const t = getLeadFollowupTimestamp(l)
+      if (t == null) return false
+      if (l.followup_date!.length === 10 && !l.followup_time) {
+        return t < todayStart
+      }
       return t < now
     }),
     today: leadsWithDate.filter((l) => {
-      const t = new Date(l.followup_date!).getTime()
+      const t = getLeadFollowupTimestamp(l)
+      if (t == null) return false
+      if (l.followup_date!.length === 10 && !l.followup_time) {
+        return t >= todayStart && t <= todayEnd
+      }
       return t >= now && t >= todayStart && t <= todayEnd
     }),
     upcoming: leadsWithDate.filter((l) => {
-      const t = new Date(l.followup_date!).getTime()
+      const t = getLeadFollowupTimestamp(l)
+      if (t == null) return false
       return t > todayEnd
     }),
   }
@@ -46,7 +91,6 @@ export const computeMetrics = (
   _activities: Activity[],
   _today: string
 ) => {
-  const now = Date.now()
   const todayStart = startOfDay(new Date()).getTime()
   const todayEnd = endOfDay(new Date()).getTime()
 
@@ -57,9 +101,8 @@ export const computeMetrics = (
     won: leads.filter((l) => l.status === 'Won').length,
     lost: leads.filter((l) => l.status === 'Lost').length,
     followupsToday: leads.filter((l) => {
-      if (!l.followup_date) return false
-      const t = new Date(l.followup_date).getTime()
-      // Count both: not-yet-passed today AND already-overdue-today
+      const t = getLeadFollowupTimestamp(l)
+      if (t == null) return false
       return t >= todayStart && t <= todayEnd
     }).length,
   }

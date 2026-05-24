@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { StatusBadge } from '../ui/StatusBadge'
-import { formatFollowupDateTime } from '../../utils/formatDateTime'
+import { parseFollowupParts } from '../../utils/formatDateTime'
 import type { Lead } from '../../types'
 
 interface FollowupEntryProps {
@@ -55,14 +55,20 @@ export function FollowupEntry({
             )}
           </div>
 
-          {/* Meta — date + time */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-            <span className="text-xs text-gray-500">
-              {formatFollowupDateTime(lead.followup_date)}
-              {isOverdue && (
-                <span className="ml-1 text-amber-600 font-medium">· Overdue</span>
-              )}
-            </span>
+          {/* Meta — date + time on two lines */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+            <div className="text-xs text-gray-500">
+              {(() => {
+                const { date, time } = parseFollowupParts(lead.followup_date, lead.followup_time)
+                return (
+                  <span>
+                    {date}
+                    {time && <span className="block text-xs text-gray-400">{time}</span>}
+                    {isOverdue && <span className="ml-1 text-amber-600 font-medium">· Overdue</span>}
+                  </span>
+                )
+              })()}
+            </div>
             {lead.assigned_to && (
               <span className="text-xs text-gray-400">{lead.assigned_to}</span>
             )}

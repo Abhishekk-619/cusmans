@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper: get the role of the currently signed-in user ───────────
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return userRole() == 'admin';
+    }
+
+    function isTeamLeadOrAbove() {
+      return userRole() in ['admin', 'team_lead'];
+    }
+
+    // ─── Users collection ──────────────────────────────────────────────
+    // Read: any authenticated user (needed for dropdowns, team lists)
+    // Create/Update: admin only (admin creates users, assigns roles)
+    // Delete: admin only
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Leads collection ──────────────────────────────────────────────
+    // Read: any authenticated user (client-side filters by role)
+    // Create: any authenticated user (all roles can add leads)
+    // Update: any authenticated user (employees edit their own, TL/admin edit any)
+    // Delete: admin and team_lead only
+    match /leads/{leadId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if isTeamLeadOrAbove();
+    }
+
+    // ─── Activities collection ─────────────────────────────────────────
+    // Read: any authenticated user
+    // Create: any authenticated user (auto-logged on status changes etc.)
+    // Update: NEVER — activities are an immutable audit trail
+    // Delete: NEVER — no one can delete activity logs
+    match /activities/{activityId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // ─── Settings collection ───────────────────────────────────────────
+    // Read: any authenticated user (e.g. import permissions check)
+    // Write: admin only
+    match /settings/{settingId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+  }
+}

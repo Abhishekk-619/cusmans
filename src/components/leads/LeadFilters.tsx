@@ -4,12 +4,19 @@ import { LEAD_STATUSES, LEAD_SOURCES, type LeadFilters as LeadFiltersType } from
 interface LeadFiltersProps {
   filters: LeadFiltersType
   onChange: (filters: LeadFiltersType) => void
+  showAssignedFilter?: boolean
+  employeeOptions?: Array<{ uid: string; name: string }>
 }
 
 const selectClass =
   'rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none bg-white'
 
-export function LeadFilters({ filters, onChange }: LeadFiltersProps) {
+export function LeadFilters({
+  filters,
+  onChange,
+  showAssignedFilter = true,
+  employeeOptions = [],
+}: LeadFiltersProps) {
   const [searchInput, setSearchInput] = useState(filters.searchTerm)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -82,13 +89,18 @@ export function LeadFilters({ filters, onChange }: LeadFiltersProps) {
       </select>
 
       {/* Assigned To */}
-      <input
-        type="text"
-        placeholder="Assigned to..."
-        value={filters.assignedTo}
-        onChange={(e) => onChange({ ...filters, assignedTo: e.target.value })}
-        className={`${selectClass} min-w-[130px]`}
-      />
+      {showAssignedFilter && (
+        <select
+          value={filters.assignedTo}
+          onChange={(e) => onChange({ ...filters, assignedTo: e.target.value })}
+          className={`${selectClass} min-w-[160px]`}
+        >
+          <option value="">All Employees</option>
+          {employeeOptions.map((employee) => (
+            <option key={employee.uid} value={employee.name}>{employee.name}</option>
+          ))}
+        </select>
+      )}
 
       {/* Follow-up Date */}
       <input

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useCRMStore } from '../../store/useCRMStore'
+import { useCRM } from '../../firebase/CRMContext'
 import { ActivityItem } from './ActivityItem'
 import { ACTIVITY_TYPES, type Activity, type ActivityType } from '../../types'
 
@@ -9,13 +9,13 @@ interface ActivityTimelineProps {
 }
 
 export function ActivityTimeline({ leadId, activities }: ActivityTimelineProps) {
-  const addActivity = useCRMStore((s) => s.addActivity)
+  const { addActivity } = useCRM()
   const [activityType, setActivityType] = useState<ActivityType>('Note')
   const [description, setDescription] = useState('')
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!description.trim()) return
-    addActivity({ lead_id: leadId, activity_type: activityType, description: description.trim() })
+    await addActivity({ lead_id: leadId, activity_type: activityType, description: description.trim() })
     setDescription('')
   }
 

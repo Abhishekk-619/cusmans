@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useCRMStore } from '../../store/useCRMStore'
+import { useState, useEffect } from 'react'
+import { useCRM } from '../../firebase/CRMContext'
 import { getActivitiesForLead } from '../../store/selectors'
 import { StatusBadge } from '../ui/StatusBadge'
 import { ActivityTimeline } from './ActivityTimeline'
@@ -8,19 +8,25 @@ import { LEAD_STATUSES, type LeadStatus, type LeadFormData } from '../../types'
 import { format } from 'date-fns'
 
 export function LeadDrawer() {
-  const openDrawerLeadId = useCRMStore((s) => s.openDrawerLeadId)
-  const leads = useCRMStore((s) => s.leads)
-  const activities = useCRMStore((s) => s.activities)
-  const closeDrawer = useCRMStore((s) => s.closeDrawer)
-  const updateLead = useCRMStore((s) => s.updateLead)
+  const { openDrawerLeadId, openDrawerInEditMode, leads, activities, closeDrawer, updateLead } = useCRM()
 
   const [isEditing, setIsEditing] = useState(false)
   const [localNotes, setLocalNotes] = useState<string | null>(null)
 
   const lead = openDrawerLeadId ? leads.find((l) => l.id === openDrawerLeadId) ?? null : null
   const leadActivities = lead ? getActivitiesForLead(activities, lead.id) : []
-
   const isOpen = lead !== null
+
+  // When a new lead is opened, sync edit mode
+  useEffect(() => {
+    if (openDrawerLeadId) {
+      setIsEditing(openDrawerInEditMode)
+      setLocalNotes(null)
+    } else {
+      setIsEditing(false)
+      setLocalNotes(null)
+    }
+  }, [openDrawerLeadId, openDrawerInEditMode])
 
   const handleClose = () => {
     setIsEditing(false)

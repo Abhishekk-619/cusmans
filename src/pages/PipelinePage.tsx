@@ -11,16 +11,14 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { useCRMStore } from '../store/useCRMStore'
+import { useCRM } from '../firebase/CRMContext'
 import { getLeadsByStatus } from '../store/selectors'
 import { KanbanColumn } from '../components/pipeline/KanbanColumn'
 import { LeadCard } from '../components/pipeline/LeadCard'
 import { LEAD_STATUSES, LOST_REASONS, type LeadStatus, type LostReason } from '../types'
 
 export function PipelinePage() {
-  const leads = useCRMStore((s) => s.leads)
-  const updateLead = useCRMStore((s) => s.updateLead)
-  const openDrawer = useCRMStore((s) => s.openDrawer)
+  const { leads, updateLead, openEditModal } = useCRM()
 
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null)
 
@@ -85,7 +83,7 @@ export function PipelinePage() {
               key={status}
               status={status}
               leads={getLeadsByStatus(leads, status)}
-              onCardClick={(id) => openDrawer(id)}
+              onCardClick={(id) => openEditModal(id)}
             />
           ))}
         </div>

@@ -1,36 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useCRM } from '../../firebase/CRMContext'
 import { LeadForm } from './LeadForm'
-import type { LeadFormData } from '../../types'
+import type { Lead, LeadFormData } from '../../types'
 
-interface AddLeadModalProps {
-  isOpen: boolean
+interface EditLeadModalProps {
+  lead: Lead | null
   onClose: () => void
 }
 
-export function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
-  const { addLead } = useCRM()
+export function EditLeadModal({ lead, onClose }: EditLeadModalProps) {
+  const { updateLead } = useCRM()
   const [submitError, setSubmitError] = useState('')
 
-  useEffect(() => {
-    if (!isOpen) return
-    setSubmitError('')
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [isOpen, onClose])
-
-  if (!isOpen) return null
+  if (!lead) return null
 
   const handleSubmit = async (data: LeadFormData) => {
     setSubmitError('')
     try {
-      await addLead(data)
+      await updateLead(lead.id, data)
       onClose()
     } catch (err: unknown) {
-      setSubmitError(err instanceof Error ? err.message : 'Failed to add lead')
+      setSubmitError(err instanceof Error ? err.message : 'Failed to update lead')
     }
   }
 
@@ -40,21 +30,33 @@ export function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">Add New Lead</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close">
+          <h2 className="text-base font-semibold text-gray-900">{lead.full_name}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Close"
+          >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
+
         {submitError && (
           <div className="mx-6 mt-4 px-3 py-2 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
             {submitError}
           </div>
         )}
+
+        {/* Form */}
         <div className="px-6 py-4">
-          <LeadForm onSubmit={handleSubmit} onCancel={onClose} />
+          <LeadForm
+            initialValues={lead}
+            onSubmit={handleSubmit}
+            onCancel={onClose}
+          />
         </div>
       </div>
     </div>

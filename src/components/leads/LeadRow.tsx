@@ -1,42 +1,51 @@
 import { StatusBadge } from '../ui/StatusBadge'
-import { formatFollowupDateTime, formatDate, formatTime } from '../../utils/formatDateTime'
+import { parseFollowupParts, formatDate, formatTime } from '../../utils/formatDateTime'
 import type { Lead } from '../../types'
 
 interface LeadRowProps {
   lead: Lead
-  onRowClick: (leadId: string) => void
+  onEditClick: (leadId: string) => void
   onDelete: (leadId: string) => void
   onToggleFollowupStatus: (leadId: string, status: 'Ongoing' | 'Completed') => void
+  canDelete?: boolean
 }
 
-export function LeadRow({ lead, onRowClick, onDelete, onToggleFollowupStatus }: LeadRowProps) {
+export function LeadRow({
+  lead,
+  onEditClick,
+  onDelete,
+  onToggleFollowupStatus,
+  canDelete = true,
+}: LeadRowProps) {
   const isLost = lead.status === 'Lost'
   const followupStatus = lead.followup_status ?? 'Ongoing'
 
   return (
     <>
-      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-        {formatDate(lead.created_at)}
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-        {formatTime(lead.created_at)}
-      </td>
-      <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
-        {lead.full_name}
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.phone || '—'}</td>
-      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.email || '—'}</td>
-      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.company || '—'}</td>
+      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{formatDate(lead.created_at)}</td>
+      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{formatTime(lead.created_at)}</td>
+      <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">{lead.full_name}</td>
+      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.phone || '-'}</td>
+      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.email || '-'}</td>
+      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.company || '-'}</td>
       <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.lead_source}</td>
       <td className="px-4 py-3 whitespace-nowrap">
         <StatusBadge status={lead.status} />
       </td>
-      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.assigned_to || '—'}</td>
-      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-        {formatFollowupDateTime(lead.followup_date)}
+      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{lead.assigned_to || '-'}</td>
+      <td className="px-4 py-3 whitespace-nowrap">
+        {(() => {
+          const { date, time } = parseFollowupParts(lead.followup_date, lead.followup_time)
+          if (date === '-') return <span className="text-sm text-gray-400">-</span>
+          return (
+            <div>
+              <p className="text-sm text-gray-700">{date}</p>
+              {time && <p className="text-xs text-gray-400">{time}</p>}
+            </div>
+          )
+        })()}
       </td>
 
-      {/* Follow-up Status column */}
       <td className="px-4 py-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
         {isLost ? (
           <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-700">
@@ -58,38 +67,44 @@ export function LeadRow({ lead, onRowClick, onDelete, onToggleFollowupStatus }: 
         )}
       </td>
 
-      {/* Actions — always visible */}
-      <td
-        className="px-4 py-3 whitespace-nowrap"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <td className="px-4 py-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1">
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onRowClick(lead.id)
+              onEditClick(lead.id)
             }}
             className="p-1.5 text-green-600 hover:text-green-700 rounded transition-colors"
-            title="View / Edit"
+            title="Edit"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
             </svg>
           </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete(lead.id)
-            }}
-            className="p-1.5 text-red-500 hover:text-red-600 rounded transition-colors"
-            title="Delete"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+          {canDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(lead.id)
+              }}
+              className="p-1.5 text-red-500 hover:text-red-600 rounded transition-colors"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          )}
         </div>
       </td>
     </>

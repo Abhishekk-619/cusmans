@@ -1,5 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { LEAD_STATUSES, LEAD_SOURCES, type Lead, type LeadFormData } from '../../types'
+import { useUsers } from '../../firebase/useUsers'
+import { useAuth } from '../../firebase/AuthContext'
 
 interface LeadFormProps {
   initialValues?: Partial<Lead>
@@ -16,6 +18,33 @@ const errorInputClass =
 const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
 
 export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
+  const { currentUser } = useAuth()
+  const { users } = useUsers()
+
+  // Build assignable employees list based on role
+  const assignableUsers = (() => {
+    if (currentUser?.role === 'admin') {
+      return users.filter((u) => u.role === 'employee' || u.role === 'team_lead')
+    }
+    if (currentUser?.role === 'team_lead') {
+      return users.filter((u) => u.role === 'employee' && u.team_lead_id === currentUser.uid)
+    }
+    return currentUser ? [currentUser] : []
+  })()
+
+  // Wrap onSubmit to inject assigned_to_uid
+  const handleFormSubmit = (data: LeadFormData) => {
+    const assignedUser = users.find((u) => u.name === data.assigned_to)
+    const followupDate = data.followup_date ? String(data.followup_date).slice(0, 10) : ''
+    const followupTime = data.followup_time?.trim() ?? ''
+    const enriched = {
+      ...data,
+      followup_date: followupDate ? (followupTime ? `${followupDate}T${followupTime}` : followupDate) : null,
+      followup_time: followupTime || undefined,
+      assigned_to_uid: assignedUser?.uid ?? currentUser?.uid ?? '',
+    }
+    onSubmit(enriched)
+  }
   const {
     register,
     handleSubmit,
@@ -27,9 +56,14 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
       email: initialValues?.email ?? '',
       company: initialValues?.company ?? '',
       lead_source: initialValues?.lead_source ?? 'Agent',
-      assigned_to: initialValues?.assigned_to ?? '',
+      assigned_to: initialValues?.assigned_to ?? currentUser?.name ?? '',
       status: initialValues?.status ?? 'New Lead',
-      followup_date: initialValues?.followup_date ?? null,
+      followup_date: initialValues?.followup_date?.slice(0, 10) ?? null,
+      followup_time:
+        initialValues?.followup_time ??
+        (initialValues?.followup_date && initialValues.followup_date.length > 10
+          ? initialValues.followup_date.slice(11, 16)
+          : ''),
       notes: initialValues?.notes ?? '',
       website_link: initialValues?.website_link ?? '',
       business_type: initialValues?.business_type ?? '',
@@ -37,7 +71,7 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
   })
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+    <form onSubmit={handleSubmit(handleFormSubmit)} noValidate>
       <div className="space-y-4">
 
         {/* Full Name */}
@@ -144,12 +178,12 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
           </div>
           <div>
             <label className={labelClass}>Assigned To</label>
-            <input
-              type="text"
-              placeholder="Alice Johnson"
-              className={inputClass}
-              {...register('assigned_to')}
-            />
+            <select className={inputClass} {...register('assigned_to')}>
+              <option value="">— Select —</option>
+              {assignableUsers.map((u) => (
+                <option key={u.uid} value={u.name}>{u.name}</option>
+              ))}
+            </select>
           </div>
         </div>
 

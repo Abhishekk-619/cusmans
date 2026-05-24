@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { useCRMStore } from '../../store/useCRMStore'
+import { useCRM } from '../../firebase/CRMContext'
 import { searchLeads } from '../../store/selectors'
 import { StatusBadge } from '../ui/StatusBadge'
 
 export function GlobalSearch() {
-  const leads = useCRMStore((s) => s.leads)
-  const openDrawer = useCRMStore((s) => s.openDrawer)
+  const { leads, openDrawer } = useCRM()
 
   const [inputValue, setInputValue] = useState('')
   const [debouncedTerm, setDebouncedTerm] = useState('')

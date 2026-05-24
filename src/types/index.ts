@@ -48,7 +48,9 @@ export interface Lead {
   website_link?: string;
   business_type?: string;
   followup_status?: 'Ongoing' | 'Completed';
-  followup_time?: string; // "HH:mm" — stored separately, combined with followup_date for display
+  followup_time?: string;
+  assigned_to_uid?: string; // UID of the assigned user for reliable filtering
+  created_by_uid?: string;  // UID of the user who created this lead
 }
 
 export interface Activity {
@@ -57,6 +59,9 @@ export interface Activity {
   activity_type: ActivityType;
   description: string;
   created_at: string;              // ISO timestamp
+  performed_by_uid?: string;
+  performed_by_name?: string;
+  performed_by_role?: 'admin' | 'team_lead' | 'employee';
 }
 
 // ─── Store Interface ──────────────────────────────────────────────────────────

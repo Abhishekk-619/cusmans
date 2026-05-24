@@ -1,12 +1,9 @@
-import { useCRMStore } from '../store/useCRMStore'
+import { useCRM } from '../firebase/CRMContext'
 import { categorizeFollowups, getTodayString } from '../store/selectors'
 import { FollowupSection } from '../components/followups/FollowupSection'
 
 export function FollowupsPage() {
-  const leads = useCRMStore((s) => s.leads)
-  const updateLead = useCRMStore((s) => s.updateLead)
-  const addActivity = useCRMStore((s) => s.addActivity)
-  const openDrawer = useCRMStore((s) => s.openDrawer)
+  const { leads, updateLead, addActivity, openEditModal } = useCRM()
 
   const today = getTodayString()
   const { today: todayLeads, upcoming, overdue } = categorizeFollowups(leads, today)
@@ -37,7 +34,7 @@ export function FollowupsPage() {
         isOverdue={false}
         onMarkComplete={handleMarkComplete}
         onReschedule={handleReschedule}
-        onLeadClick={(id) => openDrawer(id)}
+        onLeadClick={(id) => openEditModal(id)}
       />
 
       <FollowupSection
@@ -46,7 +43,7 @@ export function FollowupsPage() {
         isOverdue={true}
         onMarkComplete={handleMarkComplete}
         onReschedule={handleReschedule}
-        onLeadClick={(id) => openDrawer(id)}
+        onLeadClick={(id) => openEditModal(id)}
       />
 
       <FollowupSection
@@ -55,7 +52,7 @@ export function FollowupsPage() {
         isOverdue={false}
         onMarkComplete={handleMarkComplete}
         onReschedule={handleReschedule}
-        onLeadClick={(id) => openDrawer(id)}
+        onLeadClick={(id) => openEditModal(id)}
       />
     </div>
   )
