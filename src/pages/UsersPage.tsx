@@ -7,6 +7,7 @@ import { useUsers } from '../firebase/useUsers'
 import { useNavigate } from 'react-router-dom'
 import type { UserRole } from '../firebase/AuthContext'
 import { isAllowedEmailDomain, ALLOWED_DOMAINS_DISPLAY } from '../utils/emailValidation'
+import { getAuthErrorMessage } from '../utils/authErrors'
 
 export function UsersPage() {
   const { isAdmin } = useRole()
@@ -63,8 +64,7 @@ export function UsersPage() {
       setFormSuccess(`User created! A verification email has been sent to ${formData.email}. They must verify before they can sign in.`)
       setShowAddForm(false)
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to create user'
-      setFormError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim())
+      setFormError(getAuthErrorMessage(err))
     } finally {
       setFormLoading(false)
     }

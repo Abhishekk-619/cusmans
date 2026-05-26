@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { StatusBadge } from '../ui/StatusBadge'
+import { TimePickerAMPM } from '../ui/TimePickerAMPM'
 import { parseFollowupParts } from '../../utils/formatDateTime'
 import type { Lead } from '../../types'
 
@@ -88,11 +89,9 @@ export function FollowupEntry({
                 onChange={(e) => setNewDate(e.target.value)}
                 className="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
               />
-              <input
-                type="time"
+              <TimePickerAMPM
                 value={newTime}
-                onChange={(e) => setNewTime(e.target.value)}
-                className="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
+                onChange={(val) => setNewTime(val)}
               />
               <button
                 onClick={handleRescheduleConfirm}

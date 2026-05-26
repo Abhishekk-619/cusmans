@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form'
 import { LEAD_STATUSES, LEAD_SOURCES, type Lead, type LeadFormData } from '../../types'
 import { useUsers } from '../../firebase/useUsers'
 import { useAuth } from '../../firebase/AuthContext'
+import { TimePickerAMPM } from '../ui/TimePickerAMPM'
 
 interface LeadFormProps {
   initialValues?: Partial<Lead>
@@ -48,6 +49,8 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<LeadFormData>({
     defaultValues: {
@@ -103,8 +106,20 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
                 // Allow: backspace, delete, tab, escape, enter, arrow keys
                 const allowed = ['Backspace','Delete','Tab','Escape','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown']
                 if (allowed.includes(e.key)) return
+                // Allow Ctrl+V / Cmd+V (paste), Ctrl+C (copy), Ctrl+A (select all), Ctrl+X (cut)
+                if ((e.ctrlKey || e.metaKey) && ['v','c','a','x'].includes(e.key.toLowerCase())) return
                 // Block anything that's not a digit
                 if (!/^\d$/.test(e.key)) e.preventDefault()
+              }}
+              onPaste={(e) => {
+                // On paste, strip all non-digit characters and insert only digits
+                e.preventDefault()
+                const pastedText = e.clipboardData.getData('text')
+                const digitsOnly = pastedText.replace(/\D/g, '').slice(0, 10)
+                const input = e.target as HTMLInputElement
+                // Use execCommand for react-hook-form compatibility (triggers onChange)
+                input.focus()
+                document.execCommand('insertText', false, digitsOnly)
               }}
               {...register('phone', {
                 pattern: {
@@ -207,10 +222,9 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
           </div>
           <div>
             <label className={labelClass}>Follow-up Time</label>
-            <input
-              type="time"
-              className={inputClass}
-              {...register('followup_time')}
+            <TimePickerAMPM
+              value={watch('followup_time') ?? ''}
+              onChange={(val) => setValue('followup_time', val)}
             />
           </div>
         </div>

@@ -6,6 +6,7 @@ import { ActivityTimeline } from './ActivityTimeline'
 import { LeadForm } from './LeadForm'
 import { LEAD_STATUSES, type LeadStatus, type LeadFormData } from '../../types'
 import { format } from 'date-fns'
+import { TimePickerAMPM } from '../ui/TimePickerAMPM'
 
 export function LeadDrawer() {
   const { openDrawerLeadId, openDrawerInEditMode, leads, activities, closeDrawer, updateLead } = useCRM()
@@ -177,17 +178,15 @@ export function LeadDrawer() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-400 font-medium mb-1">Time</p>
-                        <input
-                          type="time"
+                        <TimePickerAMPM
                           value={lead.followup_time ?? ''}
-                          onChange={(e) => {
+                          onChange={(val) => {
                             const date = lead.followup_date ? lead.followup_date.slice(0, 10) : ''
                             if (date) {
-                              handleFollowupChange(`${date}T${e.target.value}`)
+                              handleFollowupChange(`${date}T${val}`)
                             }
-                            updateLead(lead.id, { followup_time: e.target.value })
+                            updateLead(lead.id, { followup_time: val })
                           }}
-                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
                         />
                       </div>
                     </div>

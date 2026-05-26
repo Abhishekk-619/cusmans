@@ -7,6 +7,7 @@ import { useUsers } from '../firebase/useUsers'
 import { useRole } from '../firebase/useRole'
 import { useNavigate } from 'react-router-dom'
 import { isAllowedEmailDomain, ALLOWED_DOMAINS_DISPLAY } from '../utils/emailValidation'
+import { getAuthErrorMessage } from '../utils/authErrors'
 
 export function MyTeamPage() {
   const { currentUser } = useAuth()
@@ -59,8 +60,7 @@ export function MyTeamPage() {
       setFormSuccess(`Employee created! A verification email has been sent to ${formData.email}. They must verify before they can sign in.`)
       setShowAddForm(false)
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to create employee'
-      setFormError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim())
+      setFormError(getAuthErrorMessage(err))
     } finally {
       setFormLoading(false)
     }
