@@ -87,6 +87,7 @@ export function LeadsPage() {
         Phone: lead.phone,
         Email: lead.email,
         Company: lead.company,
+        Location: lead.location ?? '',
         'Type of Business': lead.business_type ?? '',
         'Lead Source': lead.lead_source,
         Status: lead.status,

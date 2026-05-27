@@ -132,6 +132,7 @@ export function LeadDrawer() {
                       <InfoField label="Phone" value={lead.phone || '—'} />
                       <InfoField label="Email" value={lead.email || '—'} />
                       <InfoField label="Company" value={lead.company || '—'} />
+                      <InfoField label="Location" value={lead.location || '—'} />
                       <InfoField label="Lead Source" value={lead.lead_source} />
                       <InfoField label="Assigned To" value={lead.assigned_to || '—'} />
                       <InfoField label="Created" value={formatDate(lead.created_at)} />

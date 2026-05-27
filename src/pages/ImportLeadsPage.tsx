@@ -21,6 +21,7 @@ const CRM_FIELDS: { key: string; label: string; required?: boolean }[] = [
   { key: 'phone', label: 'Phone' },
   { key: 'email', label: 'Email' },
   { key: 'company', label: 'Company' },
+  { key: 'location', label: 'Location' },
   { key: 'lead_source', label: 'Type of Business' },
   { key: 'status', label: 'Status' },
   { key: 'assigned_to', label: 'Assigned To' },
@@ -42,6 +43,7 @@ function autoDetect(excelCol: string): string {
   if (['followupdate', 'followup', 'nextfollowup', 'nextcontact', 'duedate'].includes(c)) return 'followup_date'
   if (['notes', 'note', 'remarks', 'comment', 'comments', 'description'].includes(c)) return 'notes'
   if (['website', 'websitelink', 'url', 'web', 'siteurl'].includes(c)) return 'website_link'
+  if (['location', 'city', 'state', 'address', 'place', 'region', 'area'].includes(c)) return 'location'
   return ''
 }
 
@@ -166,6 +168,7 @@ export function ImportLeadsPage() {
         notes: getValue('notes'),
         website_link: getValue('website_link'),
         business_type: '',
+        location: getValue('location'),
         followup_status: 'Ongoing' as const,
       }
 

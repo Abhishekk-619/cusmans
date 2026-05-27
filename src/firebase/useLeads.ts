@@ -13,6 +13,17 @@ import { db } from './config'
 import type { Lead, Activity } from '../types'
 import type { AppUser } from './AuthContext'
 
+// Firestore does NOT accept `undefined` values.
+// Strip them before writing to prevent the error:
+// "Unsupported field value: undefined"
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const clean: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) clean[key] = value
+  }
+  return clean as Partial<T>
+}
+
 // ─── Leads ────────────────────────────────────────────────────────────────────
 
 export function useLeads(currentUser: AppUser | null, teamMemberNames: string[] = [], teamMemberUids: string[] = []) {
@@ -103,12 +114,12 @@ export async function addLead(
     }
   }
 
-  await addDoc(collection(db, 'leads'), {
+  await addDoc(collection(db, 'leads'), stripUndefined({
     ...data,
     status: data.status ?? 'New Lead',
     created_at: new Date().toISOString(),
     created_by_uid: createdByUid ?? '',
-  })
+  }))
   return { success: true }
 }
 
@@ -119,7 +130,7 @@ export async function updateLead(
   actor?: AppUser | null
 ): Promise<void> {
   const ref = doc(db, 'leads', id)
-  await updateDoc(ref, { ...updates })
+  await updateDoc(ref, stripUndefined({ ...updates }))
 
   if (prevLead) {
     if (updates.status && updates.status !== prevLead.status) {

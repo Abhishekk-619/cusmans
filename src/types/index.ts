@@ -8,6 +8,7 @@ export type LeadStatus =
   | 'Negotiation'
   | 'Post Demo Follow-Up'
   | 'Post Commercial Follow-Up'
+  | 'Parked'
   | 'Won'
   | 'Lost';
 
@@ -47,6 +48,7 @@ export interface Lead {
   lost_reason?: LostReason | null;
   website_link?: string;
   business_type?: string;
+  location?: string;
   followup_status?: 'Ongoing' | 'Completed';
   followup_time?: string;
   assigned_to_uid?: string; // UID of the assigned user for reliable filtering
@@ -112,6 +114,7 @@ export const LEAD_STATUSES: readonly LeadStatus[] = [
   'Negotiation',
   'Post Demo Follow-Up',
   'Post Commercial Follow-Up',
+  'Parked',
   'Won',
   'Lost',
 ] as const;
@@ -148,6 +151,7 @@ export const STATUS_COLORS: Record<LeadStatus, { bg: string; text: string }> = {
   'Negotiation':                 { bg: 'bg-orange-100', text: 'text-orange-700' },
   'Post Demo Follow-Up':         { bg: 'bg-cyan-100',   text: 'text-cyan-700'   },
   'Post Commercial Follow-Up':   { bg: 'bg-teal-100',   text: 'text-teal-700'   },
+  'Parked':                      { bg: 'bg-indigo-100', text: 'text-indigo-700' },
   'Won':                         { bg: 'bg-green-100',  text: 'text-green-700'  },
   'Lost':                        { bg: 'bg-red-100',    text: 'text-red-700'    },
 };

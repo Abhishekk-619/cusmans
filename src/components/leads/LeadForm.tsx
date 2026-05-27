@@ -41,7 +41,7 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
     const enriched = {
       ...data,
       followup_date: followupDate ? (followupTime ? `${followupDate}T${followupTime}` : followupDate) : null,
-      followup_time: followupTime || undefined,
+      followup_time: followupTime || null,
       assigned_to_uid: assignedUser?.uid ?? currentUser?.uid ?? '',
     }
     onSubmit(enriched)
@@ -70,6 +70,7 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
       notes: initialValues?.notes ?? '',
       website_link: initialValues?.website_link ?? '',
       business_type: initialValues?.business_type ?? '',
+      location: initialValues?.location ?? '',
     },
   })
 
@@ -151,8 +152,8 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
           </div>
         </div>
 
-        {/* Company + Website Link */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Company + Website Link + Location */}
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <label className={labelClass}>Company</label>
             <input
@@ -178,6 +179,15 @@ export function LeadForm({ initialValues, onSubmit, onCancel }: LeadFormProps) {
             {errors.website_link && (
               <p className="mt-1 text-xs text-red-500">{errors.website_link.message}</p>
             )}
+          </div>
+          <div>
+            <label className={labelClass}>Location</label>
+            <input
+              type="text"
+              placeholder="City, State"
+              className={inputClass}
+              {...register('location')}
+            />
           </div>
         </div>
 
