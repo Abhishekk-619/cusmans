@@ -33,6 +33,16 @@ export type ActivityType =
 
 // ─── Data Model Interfaces ────────────────────────────────────────────────────
 
+export interface FollowupNote {
+  id: string;           // nanoid or timestamp-based
+  note: string;
+  date?: string;        // optional follow-up date
+  time?: string;        // optional follow-up time (HH:MM)
+  added_by_uid: string;
+  added_by_name: string;
+  created_at: string;   // ISO timestamp
+}
+
 export interface Lead {
   id: string;
   full_name: string;
@@ -51,6 +61,7 @@ export interface Lead {
   location?: string;
   followup_status?: 'Ongoing' | 'Completed';
   followup_time?: string;
+  followup_notes?: FollowupNote[];  // follow-up history
   assigned_to_uid?: string; // UID of the assigned user for reliable filtering
   created_by_uid?: string;  // UID of the user who created this lead
 }

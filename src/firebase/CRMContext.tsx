@@ -2,7 +2,9 @@ import { createContext, useContext, useState, type ReactNode } from 'react'
 import { useLeads, useActivities, addLead, updateLead, deleteLead, addActivity } from './useLeads'
 import { useAuth } from './AuthContext'
 import { useUsers } from './useUsers'
-import type { Lead, Activity } from '../types'
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore'
+import { db } from './config'
+import type { Lead, Activity, FollowupNote } from '../types'
 
 interface CRMContextValue {
   leads: Lead[]
@@ -20,6 +22,7 @@ interface CRMContextValue {
   updateLead: (id: string, updates: Partial<Lead>) => Promise<void>
   deleteLead: (id: string) => Promise<void>
   addActivity: (data: Omit<Activity, 'id' | 'created_at'>) => Promise<void>
+  addFollowupNote: (leadId: string, note: Omit<FollowupNote, 'id' | 'created_at' | 'added_by_uid' | 'added_by_name'>) => Promise<void>
 }
 
 const CRMContext = createContext<CRMContextValue | null>(null)
@@ -85,6 +88,29 @@ export function CRMProvider({ children }: { children: ReactNode }) {
             performed_by_uid: currentUser?.uid,
             performed_by_name: currentUser?.name,
             performed_by_role: currentUser?.role,
+          })
+        },
+        addFollowupNote: async (leadId, noteData) => {
+          if (!currentUser) return
+          const entry: FollowupNote = {
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+            note: noteData.note,
+            date: noteData.date,
+            time: noteData.time,
+            added_by_uid: currentUser.uid,
+            added_by_name: currentUser.name,
+            created_at: new Date().toISOString(),
+          }
+          const ref = doc(db, 'leads', leadId)
+          await updateDoc(ref, { followup_notes: arrayUnion(entry) })
+          // Log as activity
+          await addActivity({
+            lead_id: leadId,
+            activity_type: 'Follow-up Update',
+            description: `Follow-up note added: "${noteData.note.slice(0, 80)}${noteData.note.length > 80 ? '...' : ''}"`,
+            performed_by_uid: currentUser.uid,
+            performed_by_name: currentUser.name,
+            performed_by_role: currentUser.role,
           })
         },
       }}

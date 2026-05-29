@@ -153,11 +153,34 @@ export function ImportLeadsPage() {
       const source: LeadSource = LEAD_SOURCES.includes(rawSource as LeadSource) ? (rawSource as LeadSource) : 'Other'
 
       const rawStatus = getValue('status')
-      const status: LeadStatus = LEAD_STATUSES.includes(rawStatus as LeadStatus) ? (rawStatus as LeadStatus) : 'New Lead'
+      let status: LeadStatus = 'New Lead'
+      if (rawStatus) {
+        if (LEAD_STATUSES.includes(rawStatus as LeadStatus)) {
+          status = rawStatus as LeadStatus
+        } else {
+          errors.push(
+            `"${name}": Lead status '${rawStatus}' does not exist in CRM. Valid statuses: ${LEAD_STATUSES.join(', ')}`
+          )
+          skipped++
+          continue
+        }
+      }
+
+      // Phone validation — strip +91 prefix, then non-digits, then check 10 digits
+      const rawPhone = getValue('phone')
+        .replace(/^\+?91[\s-]?/, '')  // strip +91 / 91 prefix
+        .replace(/\D/g, '')           // strip remaining non-digits
+      if (rawPhone && !/^\d{10}$/.test(rawPhone)) {
+        errors.push(
+          `"${name}": Phone number '${getValue('phone')}' is invalid. Must be exactly 10 digits.`
+        )
+        skipped++
+        continue
+      }
 
       const leadData = {
         full_name: name,
-        phone: getValue('phone'),
+        phone: rawPhone,
         email: getValue('email'),
         company: getValue('company'),
         lead_source: source,
