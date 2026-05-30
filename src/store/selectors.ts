@@ -158,3 +158,57 @@ export const getRecentActivities = (activities: Activity[], limit: number): Acti
     .slice(0, limit)
 
 export const getTodayString = (): string => format(new Date(), 'yyyy-MM-dd')
+
+/**
+ * Get completed follow-up activities grouped by time period.
+ * Uses activities where description includes 'marked as complete'.
+ * Returns the activity + the matching lead for display.
+ */
+export function getCompletedFollowups(
+  leads: Lead[],
+  activities: Activity[]
+): {
+  today: { lead: Lead; completedAt: string }[]
+  thisWeek: { lead: Lead; completedAt: string }[]
+  thisMonth: { lead: Lead; completedAt: string }[]
+} {
+  const now = new Date()
+  const dayStart = startOfDay(now).getTime()
+  const dayEnd = endOfDay(now).getTime()
+
+  // Week: Mon-Sun
+  const weekDay = now.getDay() // 0=Sun
+  const mondayOffset = weekDay === 0 ? 6 : weekDay - 1
+  const weekStart = startOfDay(new Date(now.getTime() - mondayOffset * 86400000)).getTime()
+
+  // Month
+  const monthStart = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1)).getTime()
+
+  const leadMap = new Map(leads.map((l) => [l.id, l]))
+
+  const completions = activities
+    .filter(
+      (a) =>
+        a.activity_type === 'Follow-up Update' &&
+        a.description.toLowerCase().includes('marked as complete')
+    )
+    .map((a) => {
+      const lead = leadMap.get(a.lead_id)
+      if (!lead) return null
+      return { lead, completedAt: a.created_at, ts: new Date(a.created_at).getTime() }
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null)
+    .sort((a, b) => b.ts - a.ts)
+
+  return {
+    today: completions
+      .filter((c) => c.ts >= dayStart && c.ts <= dayEnd)
+      .map(({ lead, completedAt }) => ({ lead, completedAt })),
+    thisWeek: completions
+      .filter((c) => c.ts >= weekStart && c.ts <= dayEnd)
+      .map(({ lead, completedAt }) => ({ lead, completedAt })),
+    thisMonth: completions
+      .filter((c) => c.ts >= monthStart && c.ts <= dayEnd)
+      .map(({ lead, completedAt }) => ({ lead, completedAt })),
+  }
+}
